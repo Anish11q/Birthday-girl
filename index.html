@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secret Diary</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;background:linear-gradient(135deg,#fce4ec,#f3e5f5,#e8eaf6,#e0f7fa);font-family:'Quicksand',sans-serif;overflow-x:hidden}
+  
+  /* Stars */
+  .stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+  .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:.9;transform:scale(1.4)}}
+  
+  /* Petals */
+  .petal{position:fixed;top:-20px;pointer-events:none;z-index:0;font-size:18px;animation:fall linear infinite}
+  @keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+  
+  /* Layout */
+  .container{position:relative;z-index:1;max-width:780px;margin:0 auto;padding:24px 16px 60px}
+  
+  /* Header */
+  .header{text-align:center;margin-bottom:28px}
+  .header h1{font-family:'Caveat',cursive;font-size:48px;color:#7b1fa2;text-shadow:2px 2px 0 #f8bbd0;letter-spacing:2px}
+  .header p{color:#ad6fad;font-size:13px;margin-top:4px;letter-spacing:1px}
+  
+  /* Deco cats/dolls row */
+  .deco-row{display:flex;justify-content:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+  .deco-item{font-size:32px;animation:float var(--fd,3s) ease-in-out infinite;cursor:default;user-select:none}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  
+  /* Privacy toggle */
+  .privacy-bar{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px}
+  .privacy-btn{background:linear-gradient(135deg,#ce93d8,#f48fb1);border:none;padding:8px 20px;border-radius:20px;color:#fff;font-family:'Quicksand',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:transform .2s,opacity .2s;letter-spacing:.5px}
+  .privacy-btn:hover{transform:scale(1.06);opacity:.9}
+  .privacy-label{color:#9c5fac;font-size:13px;font-weight:600}
+  
+  /* Pages wrapper */
+  .pages{display:flex;flex-direction:column;gap:24px}
+  
+  /* Single page */
+  .page{background:rgba(255,255,255,.82);backdrop-filter:blur(6px);border-radius:20px;border:1.5px solid #f8c8e8;padding:24px;box-shadow:0 4px 20px rgba(200,100,180,.12);position:relative;animation:pageIn .5s ease}
+  @keyframes pageIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .page::before{content:'';position:absolute;top:0;left:48px;bottom:0;width:1.5px;background:rgba(249,168,212,.4);border-radius:2px}
+  
+  .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-left:56px}
+  .page-num{font-family:'Caveat',cursive;font-size:20px;color:#ba68c8;font-weight:600}
+  .page-date{font-size:11px;color:#c49ecf;letter-spacing:.5px}
+  
+  .page-title-input{width:100%;padding-left:56px;background:transparent;border:none;outline:none;font-family:'Caveat',cursive;font-size:24px;color:#7b1fa2;placeholder-color:#dbb8e8;margin-bottom:10px;border-bottom:1.5px dashed #f8c8e8}
+  .page-title-input::placeholder{color:#e1b8ec}
+  
+  .page-textarea{width:100%;padding:8px 8px 8px 56px;background:transparent;border:none;outline:none;resize:none;font-family:'Caveat',cursive;font-size:20px;color:#4a2060;line-height:2;min-height:180px;letter-spacing:.3px}
+  .page-textarea::placeholder{color:#dbb8e8}
+  .page-textarea.blurred{filter:blur(5px);transition:filter .3s}
+  .page-textarea:focus.blurred{filter:blur(0);transition:filter .3s}
+  
+  /* Lines behind textarea */
+  .lines-bg{position:absolute;left:56px;right:16px;top:100px;bottom:16px;pointer-events:none;background-image:repeating-linear-gradient(transparent,transparent 39px,rgba(249,168,212,.35) 39px,rgba(249,168,212,.35) 41px);border-radius:4px}
+  
+  /* Page actions */
+  .page-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+  .page-action-btn{background:rgba(206,147,216,.15);border:1px solid #f0b8e0;padding:5px 14px;border-radius:14px;font-family:'Quicksand',sans-serif;font-size:12px;color:#9c5fac;cursor:pointer;transition:background .2s}
+  .page-action-btn:hover{background:rgba(206,147,216,.35)}
+  .page-action-btn.del{color:#e06080;border-color:#f4aabe}
+  .page-action-btn.del:hover{background:rgba(244,170,190,.3)}
+  
+  /* Add page button */
+  .add-page-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#f8c8e8,#d1c4e9);border:2px dashed #ce93d8;border-radius:20px;padding:18px;color:#7b1fa2;font-family:'Caveat',cursive;font-size:22px;cursor:pointer;transition:transform .2s,box-shadow .2s;margin-top:4px}
+  .add-page-btn:hover{transform:scale(1.02);box-shadow:0 4px 16px rgba(206,147,216,.3)}
+  
+  /* Toast */
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:linear-gradient(135deg,#ce93d8,#f48fb1);color:#fff;padding:10px 24px;border-radius:20px;font-family:'Quicksand',sans-serif;font-size:13px;font-weight:600;pointer-events:none;transition:transform .4s,opacity .4s;opacity:0;z-index:999}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#f0b8e0;border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Falling petals -->
+<div id="petals"></div>
+
+<div class="container">
+  <div class="header">
+    <h1>✨ My Secret Diary ✨</h1>
+    <p>only you can see this &bull; closes when you leave &bull; forever yours</p>
+  </div>
+
+  <div class="deco-row">
+    <span class="deco-item" style="--fd:2.8s">🐱</span>
+    <span class="deco-item" style="--fd:3.4s">🪆</span>
+    <span class="deco-item" style="--fd:2.2s">🌸</span>
+    <span class="deco-item" style="--fd:4s">🐈</span>
+    <span class="deco-item" style="--fd:3.1s">🧸</span>
+    <span class="deco-item" style="--fd:2.6s">🌙</span>
+    <span class="deco-item" style="--fd:3.7s">🐱</span>
+    <span class="deco-item" style="--fd:2.4s">🎀</span>
+  </div>
+
+  <div class="privacy-bar">
+    <span class="privacy-label">👁 Privacy mode:</span>
+    <button class="privacy-btn" id="privacyBtn" onclick="togglePrivacy()">Hide while not focused</button>
+  </div>
+
+  <div class="pages" id="pagesContainer"></div>
+
+  <button class="add-page-btn" onclick="addPage()">
+    🌸 Add a new page 🌸
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let pages = [];
+let privacyMode = true;
+let pageCounter = 0;
+
+function getTimestamp() {
+  const now = new Date();
+  return now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' · ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+function addPage() {
+  pageCounter++;
+  const id = 'page_' + pageCounter;
+  pages.push(id);
+  renderPages();
+  setTimeout(() => {
+    const el = document.getElementById('textarea_' + id);
+    if(el) el.focus();
+    const title = document.getElementById('title_' + id);
+    if(title) title.focus();
+    // scroll to new page
+    const pg = document.getElementById('pg_' + id);
+    if(pg) pg.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 100);
+  showToast('✨ New page added!');
+}
+
+function deletePage(id) {
+  if(pages.length === 1) { showToast('🌸 Keep at least one page!'); return; }
+  pages = pages.filter(p => p !== id);
+  renderPages();
+  showToast('🗑 Page removed');
+}
+
+function copyPage(id) {
+  const title = document.getElementById('title_' + id)?.value || '';
+  const text = document.getElementById('textarea_' + id)?.value || '';
+  const full = (title ? title + '\n\n' : '') + text;
+  if(!full.trim()) { showToast('📝 Nothing to copy yet!'); return; }
+  navigator.clipboard.writeText(full).then(() => showToast('📋 Copied to clipboard!')).catch(() => showToast('⚠️ Copy failed'));
+}
+
+function renderPages() {
+  const container = document.getElementById('pagesContainer');
+  // Save current values
+  const saved = {};
+  pages.forEach(id => {
+    const t = document.getElementById('title_' + id);
+    const ta = document.getElementById('textarea_' + id);
+    saved[id] = { title: t ? t.value : '', text: ta ? ta.value : '' };
+  });
+  container.innerHTML = '';
+  pages.forEach((id, idx) => {
+    const div = document.createElement('div');
+    div.className = 'page';
+    div.id = 'pg_' + id;
+    const ts = getTimestamp();
+    div.innerHTML = `
+      <div class="lines-bg"></div>
+      <div class="page-header">
+        <span class="page-num">📖 Page ${idx+1}</span>
+        <span class="page-date">${ts}</span>
+      </div>
+      <input class="page-title-input" id="title_${id}" placeholder="Give this page a title... 🌸" maxlength="80">
+      <textarea class="page-textarea${privacyMode?' blurred':''}" id="textarea_${id}" placeholder="Start writing your secret thoughts here... no one else can see this 🐱✨" oninput="autoResize(this)"></textarea>
+      <div class="page-actions">
+        <button class="page-action-btn" onclick="copyPage('${id}')">📋 Copy</button>
+        <button class="page-action-btn del" onclick="deletePage('${id}')">🗑 Remove</button>
+      </div>
+    `;
+    container.appendChild(div);
+    // restore
+    if(saved[id]) {
+      document.getElementById('title_' + id).value = saved[id].title;
+      const ta = document.getElementById('textarea_' + id);
+      ta.value = saved[id].text;
+      autoResize(ta);
+    }
+  });
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight + 8) + 'px';
+}
+
+function togglePrivacy() {
+  privacyMode = !privacyMode;
+  const btn = document.getElementById('privacyBtn');
+  btn.textContent = privacyMode ? 'Hide while not focused' : 'Always visible';
+  renderPages();
+  showToast(privacyMode ? '👁 Privacy mode ON' : '👁 Privacy mode OFF');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Stars
+function makeStars() {
+  const c = document.getElementById('stars');
+  for(let i=0;i<80;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random()*3+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;opacity:.3`;
+    c.appendChild(s);
+  }
+}
+
+// Petals
+const petalEmojis = ['🌸','🌺','🌼','🍃','✨','💮','🌷'];
+function makePetals() {
+  const c = document.getElementById('petals');
+  for(let i=0;i<14;i++){
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.textContent = petalEmojis[Math.floor(Math.random()*petalEmojis.length)];
+    p.style.cssText=`left:${Math.random()*100}%;animation-duration:${7+Math.random()*10}s;animation-delay:${Math.random()*10}s;font-size:${14+Math.random()*12}px`;
+    c.appendChild(p);
+  }
+}
+
+// Warn on leave
+window.addEventListener('beforeunload', e => {
+  const hasContent = pages.some(id => {
+    const t = document.getElementById('title_'+id)?.value || '';
+    const tx = document.getElementById('textarea_'+id)?.value || '';
+    return t.trim() || tx.trim();
+  });
+  if(hasContent) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// Init
+makeStars();
+makePetals();
+addPage();
+</script>
+</body>
+</html>
